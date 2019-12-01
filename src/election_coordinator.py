@@ -1,51 +1,9 @@
 from api import *
-import xmlrpc.client
-import xmlrpc.server
 import logging
 import re
-
-
-def authentication(candidate: str, voter: Voter):
-    allowed_voters = open("allowed_voters.txt", "r")
-
-    # Format voter data
-    voter_name = voter['name'].upper()
-    voter_candidate = candidate.upper()
-    voter_cpf = voter['cpf']
-    if voter_cpf.isdigit(): #just numbers
-        if len(voter_cpf) < 11:
-            voter_cpf = voter_cpf.zfill(11)
-        voter_cpf = '{}.{}.{}-{}'.format(voter_cpf[:3], voter_cpf[3:6], voter_cpf[6:9], voter_cpf[9:])
-    prog = re.compile('[0-9]{3}\.?[0-9]{3}\.?[0-9]{3}\-?[0-9]{2}$')
-    result = prog.match(voter_cpf)
-    if result: #CPF correctly formatted
-        pass
-    else:
-        return None,'Wrong CPF Format. Expected xxx.xxx.xxx-xx and received '+voter_cpf, None
-
-    # Sending information
-    counter = 0
-    allowed_voters_data = []
-    for line in allowed_voters.readlines():
-        counter = counter + 1
-        allowed_voter_data = line.split(',')
-        allowed_voter_data[2] = allowed_voter_data[2].replace('\n', '')
-        allowed_voters_data.append(allowed_voter_data)
-        if allowed_voter_data[0] == voter_name and allowed_voter_data[1] == voter_cpf:
-            authenticated_voter = Voter(voter_cpf, voter_name)
-            return Vote(authenticated_voter, voter_candidate), 'Successful Authentication', int(allowed_voter_data[2])
-
-    name_flag = False
-    cpf_flag = False
-    for i in range(counter):
-        if allowed_voters_data[i][0] == voter_name:
-            name_flag = True
-        if allowed_voters_data[i][1] != voter_cpf:
-            cpf_flag = True
-    if not name_flag:
-        return None, 'Given name not in database of allowed voters', None
-    elif not cpf_flag:
-        return None, 'Given CPF not in database of allowed voters', None
+import threading
+import xmlrpc.client
+import xmlrpc.server
 
 
 class CoordinatorService:
@@ -82,17 +40,68 @@ class CoordinatorService:
         for vote in self.votes:
             homologator.homologate_vote(vote)
 
+    def _is_validate_cpf(self, cpf: str):
+        if voter_cpf.isdigit(): #just numbers
+            if len(voter_cpf) < 11:
+                voter_cpf = voter_cpf.zfill(11)
+            voter_cpf = f'{voter_cpf[:3]}.{voter_cpf[3:6]}.{voter_cpf[6:9]}-{voter_cpf[9:]}'
+        prog = re.compile('[0-9]{3}\.?[0-9]{3}\.?[0-9]{3}\-?[0-9]{2}$')
+        result = prog.match(voter_cpf)
+        if result: #CPF correctly formatted
+            return True
+        return False
+
+    def _authentication(self, candidate: str, voter: Voter):
+        allowed_voters = open("allowed_voters.txt", "r")
+
+        # Format voter data
+        voter_name = voter['name'].upper()
+        voter_candidate = candidate.upper()
+        voter_cpf = voter['cpf']
+        if not self._is_valid_cpf(voter_cpf):
+            return None, f'Wrong CPF Format. Expected xxx.xxx.xxx-xx and received {voter_cpf}', None
+
+        # Sending information
+        counter = 0
+        allowed_voters_data = []
+        for line in allowed_voters.readlines():
+            counter = counter + 1
+            allowed_voter_data = line.split(',')
+            allowed_voter_data[2] = allowed_voter_data[2].replace('\n', '')
+            allowed_voters_data.append(allowed_voter_data)
+            if allowed_voter_data[0] == voter_name and allowed_voter_data[1] == voter_cpf:
+                authenticated_voter = Voter(voter_cpf, voter_name)
+                return Vote(authenticated_voter, voter_candidate), 'Successful Authentication', int(allowed_voter_data[2])
+
+        name_flag = False
+        cpf_flag = False
+        for i in range(counter):
+            if allowed_voters_data[i][0] == voter_name:
+                name_flag = True
+            if allowed_voters_data[i][1] != voter_cpf:
+                cpf_flag = True
+        if not name_flag:
+            return None, 'Given name not in database of allowed voters', None
+        elif not cpf_flag:
+            return None, 'Given CPF not in database of allowed voters', None
+
 
 class ElectionCoordinator(xmlrpc.server.SimpleXMLRPCServer):
-    def __init__(self, addr=RPC_SERVER_ADDR):
+    def __init__(self, addr: tuple = RPC_SERVER_ADDR, timeout: int = 10):
         super().__init__(addr, allow_none=True, logRequests=False)
         self.addr = addr
+        self.timeout = timeout
         self._register_services()
         self._create_logger()
 
     def start(self):
         self.logger.info('Listenning to connections')
-        self.serve_forever()
+        serving_thread = threading.Thread(target=self.serve_forever)
+        serving_thread.start()
+        serving_thread.join(timeout=self.timeout)
+        
+        self.logger.info('Election time has run out')
+        self.shutdown()
 
     def _register_services(self):
         self.register_introspection_functions()
