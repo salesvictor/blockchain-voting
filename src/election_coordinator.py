@@ -3,6 +3,11 @@ import xmlrpc.server
 import logging
 
 
+def register_vote(candidate: str, voter: Voter):
+    logger = logging.getLogger('ElectionCoordinator')
+    logger.info('Received vote')
+
+
 class ElectionCoordinator(xmlrpc.server.SimpleXMLRPCServer):
     def __init__(self, addr):
         super().__init__(addr)

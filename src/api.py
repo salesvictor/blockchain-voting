@@ -24,7 +24,3 @@ def logger_factory(name: str, filename: str):
 
 class Voter:
     pass
-
-
-def register_vote(candidate: str, voter: Voter):
-    pass
