@@ -44,34 +44,41 @@ class CoordinatorService:
         logger = logging.getLogger('ElectionCoordinator')
         logger.info('Received vote')
 
-        vote, answer, vote_weight = authentication(candidate, voter)
+        # vote, answer, vote_weight = authentication(candidate, voter)
 
+        vote = Vote(Voter(voter['name'], voter['cpf']), candidate)
+        vote_weight = 1
+
+        print(vote, vote_weight)
         if vote is not None:
+            self.votes.append(vote)
+            logger.info(self.votes)
+
             homologator = xmlrpc.client.ServerProxy('http://localhost:8001/')
             for i in range(vote_weight):
                 homologator.homologate_vote(vote)
-            logger.info('Vote CPF is ' + vote.voter.cpf)
+            logger.info('Vote CPF is ' + vote.cpf)
             logger.info('Vote Weight is ' + str(vote_weight))
+
             return 'Vote received successfully'
         else:
+            logger.info('An error occurred')
             return answer
 
-        self.votes.append(vote)
-        logger.info(self.votes)
 
-    def add_homologator(port: int):
+    def add_homologator(self, port: int):
         logger = logging.getLogger('ElectionCoordinator')
         logger.info(f'New homologator on port {port}')
 
         homologator = xmlrpc.client.ServerProxy(f'https://localhost:{port}/')
-        homologators.append(homologator)
+        self.homologators.append(homologator)
         
         for vote in self.votes:
             homologator.homologate_vote(vote)
 
 
 class ElectionCoordinator(xmlrpc.server.SimpleXMLRPCServer):
-    def __init__(self, addr):
+    def __init__(self, addr=RPC_SERVER_ADDR):
         super().__init__(addr, allow_none=True, logRequests=False)
         self.addr = addr
         self._register_services()

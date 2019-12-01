@@ -6,6 +6,7 @@ import logging
 from random import randint
 from api import *
 
+
 def homologate_vote(vote: Vote):
     logger = logging.getLogger('Homologator')
     logger.info('Received vote to homologate')
@@ -16,7 +17,7 @@ def homologate_vote(vote: Vote):
 class Homologator(xmlrpc.server.SimpleXMLRPCServer):
     def __init__(self, addr, number_candidates: int):
 
-        super().__init__(addr, allow_none=True)
+        super().__init__(addr, logRequests=False, allow_none=True)
 
         self.addr = addr
         self._register_functions()
@@ -50,7 +51,7 @@ class Homologator(xmlrpc.server.SimpleXMLRPCServer):
                 return name
 
     def add_vote(self, vote):
-        candidate_position = self.map_vote(vote['candidate_name'])
+        candidate_position = self.map_vote(vote['candidate'])
         self.blockchain_candidates[candidate_position].add_pending(Transaction(vote['name'], vote['cpf']))
         self.blockchain_candidates[candidate_position].build_block()
 
@@ -68,7 +69,7 @@ if __name__ == "__main__":
     homologator = Homologator(number_candidates=2, addr=('localhost', 8001))
     election_coordinator = xmlrpc.client.ServerProxy(RPC_SERVER_URI)
     try:
-        print(election_coordinator.add_homologator(8001))
+        election_coordinator.add_homologator(8001)
 
     except xmlrpc.client.ProtocolError as err:
         print("Error occurred")

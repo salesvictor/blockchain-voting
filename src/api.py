@@ -30,5 +30,6 @@ class Voter:
 
 class Vote:
     def __init__(self, voter: Voter, candidate: str):
-        self.voter = voter
+        self.name = voter.name
+        self.cpf = voter.cpf
         self.candidate = candidate
