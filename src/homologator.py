@@ -5,6 +5,7 @@ import xmlrpc.server
 import logging
 from random import randint
 from api import *
+import sys
 
 
 def homologate_vote(vote: Vote):
@@ -66,10 +67,11 @@ class Homologator(xmlrpc.server.SimpleXMLRPCServer):
         return name_candidate
 
 if __name__ == "__main__":
-    homologator = Homologator(number_candidates=2, addr=('localhost', 8001))
+    port = int(sys.argv[1])
+    print(port)
+    homologator = Homologator(number_candidates=2, addr=('localhost', port))
     election_coordinator = xmlrpc.client.ServerProxy(RPC_SERVER_URI)
     try:
-        election_coordinator.add_homologator(8001)
-
+        election_coordinator.add_homologator(port)
     except xmlrpc.client.ProtocolError as err:
         print("Error occurred")

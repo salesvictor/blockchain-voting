@@ -30,7 +30,6 @@ def authentication(candidate: str, voter: Voter):
         allowed_voter_data = line.split(',')
         allowed_voter_data[2] = allowed_voter_data[2].replace('\n', '')
         allowed_voters_data.append(allowed_voter_data)
-        print(allowed_voter_data)
         if allowed_voter_data[0] == voter_name and allowed_voter_data[1] == voter_cpf:
             authenticated_voter = Voter(voter_cpf, voter_name)
             return Vote(authenticated_voter, voter_candidate), 'Successful Authentication', int(allowed_voter_data[2])
