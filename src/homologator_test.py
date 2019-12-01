@@ -1,3 +1,3 @@
 import homologator
 
-homologator = homologator.Homologator(('localhost', 8001), 3)
+homologator = homologator.Homologator(('localhost', 8001))

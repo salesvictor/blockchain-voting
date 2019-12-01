@@ -58,7 +58,7 @@ class HomologatorService():
 
 
 class Homologator(xmlrpc.server.SimpleXMLRPCServer):
-    def __init__(self, addr, number_candidates: int):
+    def __init__(self, addr):
 
         super().__init__(addr, logRequests=False, allow_none=True)
 
@@ -81,8 +81,7 @@ class Homologator(xmlrpc.server.SimpleXMLRPCServer):
 
 if __name__ == "__main__":
     port = int(sys.argv[1])
-    print(port)
-    homologator = Homologator(number_candidates=2, addr=('localhost', port))
+    homologator = Homologator(addr=('localhost', port))
     election_coordinator = xmlrpc.client.ServerProxy(RPC_SERVER_URI)
     try:
         election_coordinator.add_homologator(port)
