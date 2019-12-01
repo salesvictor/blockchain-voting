@@ -23,17 +23,29 @@ def authentication(candidate: str, voter: Voter):
         return None,'Wrong CPF Format. Expected xxx.xxx.xxx-xx and received '+voter_cpf, None
 
     # Sending information
+    counter = 0
+    allowed_voters_data = []
     for line in allowed_voters.readlines():
+        counter = counter + 1
         allowed_voter_data = line.split(',')
         allowed_voter_data[2] = allowed_voter_data[2].replace('\n', '')
+        allowed_voters_data.append(allowed_voter_data)
+        print(allowed_voter_data)
         if allowed_voter_data[0] == voter_name and allowed_voter_data[1] == voter_cpf:
             authenticated_voter = Voter(voter_cpf, voter_name)
             return Vote(authenticated_voter, voter_candidate), 'Successful Authentication', int(allowed_voter_data[2])
-        else:
-            if allowed_voter_data[0] != voter_name:
-                return None, 'Given name not in database of allowed voters', None
-            if allowed_voter_data[1] != voter_cpf:
-                return None, 'Given CPF not in database of allowed voters', None
+
+    name_flag = False
+    cpf_flag = False
+    for i in range(counter):
+        if allowed_voters_data[i][0] == voter_name:
+            name_flag = True
+        if allowed_voters_data[i][1] != voter_cpf:
+            cpf_flag = True
+    if not name_flag:
+        return None, 'Given name not in database of allowed voters', None
+    elif not cpf_flag:
+        return None, 'Given CPF not in database of allowed voters', None
 
 
 class CoordinatorService:
@@ -44,10 +56,10 @@ class CoordinatorService:
         logger = logging.getLogger('ElectionCoordinator')
         logger.info('Received vote')
 
-        # vote, answer, vote_weight = authentication(candidate, voter)
+        vote, answer, vote_weight = authentication(candidate, voter)
 
-        vote = Vote(Voter(voter['name'], voter['cpf']), candidate)
-        vote_weight = 1
+        #vote = Vote(Voter(voter['name'], voter['cpf']), candidate)
+        #vote_weight = 1
 
         print(vote, vote_weight)
         if vote is not None:
