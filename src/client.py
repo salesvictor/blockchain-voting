@@ -16,7 +16,7 @@ def voting_process():
     cpf = input('Type your CPF: ')
     print()
 
-    voter = Voter(cpf, name)
+    voter = Voter(name, cpf)
     logger.info('voter '+str([cpf, name])+' registered')
     logger.info('voter '+str([cpf, name])+' starting voting')
     candidate = input('Type your chosen candidate: ')

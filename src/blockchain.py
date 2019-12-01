@@ -33,7 +33,7 @@ class Blockchain:
             self.pending_transactions = []
             self.blockchain.append(block)
         else:
-            self.pending_transactions = Transaction('hacker', 'nobody', 'corruped package', 'no id')
+            self.pending_transactions = Transaction('corrupted package', 'no id')
             block = Block(self.pending_transactions, '0' * 64)
             self.pending_transactions = []
             self.blockchain.append(block)

@@ -8,46 +8,35 @@ from api import *
 import sys
 
 
-def homologate_vote(vote: Vote):
-    logger = logging.getLogger('Homologator')
-    logger.info('Received vote to homologate')
+class HomologatorService():
 
-    return True
-
-
-class Homologator(xmlrpc.server.SimpleXMLRPCServer):
-    def __init__(self, addr, number_candidates: int):
-
-        super().__init__(addr, logRequests=False, allow_none=True)
-
-        self.addr = addr
-        self._register_functions()
-        self._create_logger()
-
-        self.dict = {'Candidate A': 0, 'Candidate B': 1, 'Candidate C': 2, 'Candidate D': 3, 'Candidate E': 4}
-        self.number_candidates = number_candidates
+    def __init__(self):
+        self.map_candidate = {'Candidate A': 0, 'Candidate B': 1, 'Candidate C': 2, 'Candidate D': 3, 'Candidate E': 4}
         self.blockchain_candidates = []
+        self.number_candidates = 5
         for i in range(self.number_candidates):
             bc = Blockchain()
             self.blockchain_candidates.append(bc)
 
-        server_thread = Thread(target=self.serve_forever)
-        server_thread.start()
+    def request_winner(self):
+        logger = logging.getLogger('Homologator')
+        logger.info('Received request to send the winner of the election')
 
-    def _register_functions(self):
-        self.register_introspection_functions()
-        self.register_function(homologate_vote)
+        return self.get_winner_election()
 
-    def _create_logger(self):
-        self.logger = logger_factory('Homologator',
-                                     'Homologator.log')
-        self.logger.info('Ready')
+    def homologate_vote(self, vote: Vote):
+        logger = logging.getLogger('Homologator')
+        logger.info('Received vote to homologate')
+
+        self.add_vote(vote)
+
+        return 'Vote homologated'
 
     def map_vote(self, name_voter:str):
-        return self.dict[name_voter]
+        return self.map_candidate[name_voter]
 
     def get_candidate_name(self, position):
-        for name,val in self.dict.items():
+        for name, val in self.map_candidate.items():
             if val == position:
                 return name
 
@@ -65,6 +54,30 @@ class Homologator(xmlrpc.server.SimpleXMLRPCServer):
                 name_candidate = self.get_candidate_name(max)
 
         return name_candidate
+
+
+
+class Homologator(xmlrpc.server.SimpleXMLRPCServer):
+    def __init__(self, addr, number_candidates: int):
+
+        super().__init__(addr, logRequests=False, allow_none=True)
+
+        self.addr = addr
+        self._register_functions()
+        self._create_logger()
+
+        server_thread = Thread(target=self.serve_forever)
+        server_thread.start()
+
+    def _register_functions(self):
+        self.register_introspection_functions()
+        self.register_instance(HomologatorService())
+
+    def _create_logger(self):
+        self.logger = logger_factory('Homologator',
+                                     'Homologator.log')
+        self.logger.info('Ready')
+
 
 if __name__ == "__main__":
     port = int(sys.argv[1])
