@@ -19,15 +19,7 @@ class ElectionCoordinator(xmlrpc.server.SimpleXMLRPCServer):
         self.register_function(register_vote)
 
     def _create_logger(self):
-        self.logger = logging.getLogger('ElectionCoordinator')
-        self.logger.setLevel(logging.INFO)
-        file_handler = logging.FileHandler('ElectionCoordinator.log')
-        file_handler.setLevel(logging.DEBUG)
-        stream_handler = logging.StreamHandler()
-        stream_handler.setLevel(logging.INFO)
-        file_handler.setFormatter(logger_formatter)
-        stream_handler.setFormatter(logger_formatter)
-        self.logger.addHandler(file_handler)
-        self.logger.addHandler(stream_handler)
+        self.logger = logger_factory('ElectionCoordinator',
+                                     'ElectionCoordinator.log')
         self.logger.info('Ready')
 
