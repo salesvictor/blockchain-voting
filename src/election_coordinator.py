@@ -40,7 +40,7 @@ class CoordinatorService:
         for vote in self.votes:
             homologator.homologate_vote(vote)
 
-    def _is_validate_cpf(self, cpf: str):
+    def _is_valid_cpf(self, cpf: str):
         if cpf.isdigit(): #just numbers
             if len(cpf) < 11:
                 cpf = cpf.zfill(11)
