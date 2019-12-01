@@ -15,7 +15,7 @@ def authentication(candidate: str, voter: Voter):
         if len(voter_cpf) < 11:
             voter_cpf = voter_cpf.zfill(11)
         voter_cpf = '{}.{}.{}-{}'.format(voter_cpf[:3], voter_cpf[3:6], voter_cpf[6:9], voter_cpf[9:])
-    prog = re.compile('[0-9]{3}\.?[0-9]{3}\.?[0-9]{3}\-?[0-9]{2}')
+    prog = re.compile('[0-9]{3}\.?[0-9]{3}\.?[0-9]{3}\-?[0-9]{2}$')
     result = prog.match(voter_cpf)
     if result: #CPF correctly formatted
         pass
