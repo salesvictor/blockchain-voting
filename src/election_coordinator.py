@@ -40,7 +40,7 @@ class CoordinatorService:
         for vote in self.votes:
             homologator.homologate_vote(vote)
 
-    def _is_validate_cpf(self, cpf: str):
+    def _is_valid_cpf(self, cpf: str):
         if voter_cpf.isdigit(): #just numbers
             if len(voter_cpf) < 11:
                 voter_cpf = voter_cpf.zfill(11)
@@ -87,7 +87,7 @@ class CoordinatorService:
 
 
 class ElectionCoordinator(xmlrpc.server.SimpleXMLRPCServer):
-    def __init__(self, addr: tuple = RPC_SERVER_ADDR, timeout: int = 10):
+    def __init__(self, addr: tuple = RPC_SERVER_ADDR, timeout: int = 60):
         super().__init__(addr, allow_none=True, logRequests=False)
         self.addr = addr
         self.timeout = timeout
@@ -100,8 +100,9 @@ class ElectionCoordinator(xmlrpc.server.SimpleXMLRPCServer):
         serving_thread.start()
         serving_thread.join(timeout=self.timeout)
         
-        self.logger.info('Election time has run out')
+        self.logger.info('Election time has run out, shutting RPC down')
         self.shutdown()
+        self.logger.info('Servers are down')
 
     def _register_services(self):
         self.register_introspection_functions()
