@@ -25,6 +25,13 @@ class Blockchain:
     def add_pending(self, transaction: Transaction):
         self.pending_transactions.append(transaction)
 
+    def copy_blocks(self, list_transactions):
+        for transactions in list_transactions[1:]:
+            self.pending_transactions = Transaction(transactions[0]['name'], transactions[0]['cpf'])
+            block = Block(self.pending_transactions, self.blockchain[-1].hash)
+            self.pending_transactions = []
+            self.blockchain.append(block)
+
     def build_block(self):
         if len(self.pending_transactions) == 0:
             raise Exception('build_block: no transactions to build a block from')

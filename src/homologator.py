@@ -1,6 +1,7 @@
 from block import Block, Transaction
 from blockchain import Blockchain
 import xmlrpc.server
+import xmlrpc.client
 import logging
 import threading
 from random import randint
@@ -11,7 +12,6 @@ import sys
 class Homologator(xmlrpc.server.SimpleXMLRPCServer):
     def __init__(self, addr):
         super().__init__(addr, logRequests=False, allow_none=True)
-
         self.addr = addr
         self.shutdown_condition = threading.Condition()
         self.shutdown_event = threading.Event()
@@ -48,6 +48,7 @@ class Homologator(xmlrpc.server.SimpleXMLRPCServer):
 class HomologatorService:
     def __init__(self, homologator: Homologator):
         self.homologator = homologator
+        self.port = self.homologator.addr[1]
         self.logger = logging.getLogger('Homologator')
         self.candidates = []
         self.candidate_number = dict()
@@ -96,6 +97,33 @@ class HomologatorService:
                 name_candidate = self.candidates[blockchain_candidate.id][0]
 
         return name_candidate
+
+    def pass_blockchains_to_new_homologator(self, candidate: int):
+        self.logger.info('Pass the candidate\'s blockchain to a new homologator')
+
+        return [block.transactions for block in self.blockchain_candidates[candidate].blockchain]
+
+    def pass_ports(self, ports: list):
+        old_homologators = []
+        for port in ports:
+            old_homologator = xmlrpc.client.ServerProxy(f'http://localhost:{port}')
+            old_homologators.append(old_homologator)
+        for candidate in range(self.number_candidates):
+            blockchain_candidate = []
+            for old_homologator in old_homologators:
+                print(old_homologator)
+                list_transaction = old_homologator.pass_blockchains_to_new_homologator(candidate)
+                print('kdjksjdc')
+                bc = Blockchain(candidate)
+                bc.copy_blocks(list_transaction)
+                print('kdjksjdc')
+                blockchain_candidate.append(bc)
+            blockchain_candidate = [bc for bc in blockchain_candidate if bc.is_valid()]
+            biggest_size = max([len(bc.blockchain) for bc in blockchain_candidate])
+            blockchain_candidate = [bc for bc in blockchain_candidate if len(bc.blockchain) == biggest_size]
+            self.blockchain_candidates[candidate] = blockchain_candidate[0]
+
+
 
     def _get_candidates(self):
         file = open('candidates.csv', 'r')

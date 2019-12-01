@@ -49,7 +49,7 @@ class CoordinatorService:
 
         homologator = xmlrpc.client.ServerProxy(f'http://localhost:{port}/')
         if self.homologators:
-            homologator.get_ports([port for _, port in self.homologators])
+            homologator.pass_ports([port for _, port in self.homologators])
         else:
             while self.votes:
                 homologator.homologate_vote(self.votes.pop(0))
@@ -101,7 +101,7 @@ class CoordinatorService:
 
 
 class ElectionCoordinator(xmlrpc.server.SimpleXMLRPCServer):
-    def __init__(self, addr: tuple = RPC_SERVER_ADDR, timeout: int = 10):
+    def __init__(self, addr: tuple = RPC_SERVER_ADDR, timeout: int = 100):
         super().__init__(addr, allow_none=True, logRequests=False)
         self.timeout = timeout
         self.service = CoordinatorService()
