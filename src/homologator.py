@@ -1,18 +1,33 @@
 from block import Block, Transaction
 from blockchain import Blockchain
+import api
 
-if __name__ == "main":
+NUMBER_CANDIDATES = 0
 
-    bc = Blockchain()
-    print("kjbscjascbjksad")
-    bc.add_pending(Transaction('my_address', 'your_address', 'Vidal', '001.001.002-56'))
-    bc.add_pending(Transaction('your_address', 'my_address', 'Batata', '001.001.003-56'))
-    bc.add_pending(Transaction('your_address', 'other_address', 'Lourenço', '001.031.002-56'))
+if __name__ == "__main__":
 
-    bc.build_block()
+    blockchains = []
 
-    for block in bc.blockchain:
-        print(block)
+    NUMBER_CANDIDATES = 5
 
-    for address in ['my_address', 'your_address', 'other_address']:
-        print(address, bc.check_balance(address))
+    for i in range(NUMBER_CANDIDATES):
+        bc = Blockchain()
+        blockchains.append(bc)
+
+    blockchains[0].add_pending(Transaction('my_address', 'your_address', 'Vidal', '001.001.002-56'))
+    blockchains[0].build_block()
+    blockchains[1].add_pending(Transaction('your_address', 'my_address', 'Batata', '001.001.003-56'))
+    blockchains[1].build_block()
+    blockchains[2].add_pending(Transaction('your_address', 'other_address', 'Lourescasjjdascvhasdjvcsdnço', '001.031.002-56'))
+    blockchains[2].build_block()
+    blockchains[3].add_pending(
+        Transaction('your_address', 'other_address', 'Lourescasjjdascvhasdjvcsdnço', '001.031.002-56'))
+    blockchains[3].build_block()
+    blockchains[4].add_pending(
+        Transaction('your_address', 'other_address', 'Lourescasjjdascvhasdjvcsdnço', '001.031.002-56'))
+    blockchains[4].build_block()
+
+    for blockchain in blockchains:
+        for block in blockchain.blockchain:
+            print(block)
+        print(len(blockchain.blockchain))
