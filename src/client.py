@@ -66,7 +66,7 @@ class Client:
                 self.logger.info(f'Following error occurred:{register_status}')
 
         except xmlrpc.client.ProtocolError as err:
-            print("Error occurred")
+            print(f"Error occurred: {str(err)}")
 
 
 if __name__ == '__main__':
