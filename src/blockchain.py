@@ -7,7 +7,8 @@ PROBABILITY_TO_CORRUPT = 0.001
 class Blockchain:
     ''' Will hold a stream of blocks. '''
 
-    def __init__(self):
+    def __init__(self, id):
+        self.id = id
         self.blockchain = [self.create_block()]
         self.pending_transactions = []
 

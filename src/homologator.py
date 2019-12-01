@@ -11,11 +11,11 @@ import sys
 class HomologatorService():
     def __init__(self):
         self.logger = logging.getLogger('Homologator')
-        self.map_candidate = {'Candidate A': 0, 'Candidate B': 1, 'Candidate C': 2, 'Candidate D': 3, 'Candidate E': 4}
+        self.map_candidate = {'CANDIDATE A': 0, 'CANDIDATE B': 1, 'CANDIDATE C': 2, 'CANDIDATE D': 3, 'CANDIDATE E': 4}
         self.blockchain_candidates = []
         self.number_candidates = 5
         for i in range(self.number_candidates):
-            bc = Blockchain()
+            bc = Blockchain(i)
             self.blockchain_candidates.append(bc)
 
     def homologate_vote(self, vote: Vote):
@@ -39,15 +39,22 @@ class HomologatorService():
         self.blockchain_candidates[candidate_position].add_pending(transaction)
         self.blockchain_candidates[candidate_position].build_block()
 
+    def show_all_blockchains(self):
+        for blockchain_candidate in self.blockchain_candidates:
+            for block in blockchain_candidate.blockchain:
+                print(block)
+            print(len(blockchain_candidate.blockchain))
+
     def get_election_winner(self):
         self.logger.info('Received request to send the winner of the election')
 
         max_chain_length = 0
         name_candidate = ''
+
         for blockchain_candidate in self.blockchain_candidates:
             if max_chain_length < len(blockchain_candidate.blockchain) - 1:
                 max_chain_length = len(blockchain_candidate.blockchain) - 1
-                name_candidate = self.get_candidate_name(max_chain_length)
+                name_candidate = self.get_candidate_name(blockchain_candidate.id)
 
         return name_candidate
 
