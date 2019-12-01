@@ -4,10 +4,12 @@ import logging
 from api import *
 
 def voting_process():
-    # create logger object
+    # Create logger object
     logger = logger_factory('vote_process', 'voting.log', logging.ERROR)
+    logger.info('Ready')
 
-    logger.info('registering voter')
+    # Picking voter informations (Name, CPF and Chosen Candidate)
+    logger.info('Registering voter')
     name = input('Type your name: ')
     print()
 
@@ -20,10 +22,11 @@ def voting_process():
     candidate = input('Type your chosen candidate: ')
     print()
 
-    logger.info('vote registered')
-
+    # Create Conection with Election Coordinator to Register Vote
     election_coordinator = xmlrpc.client.ServerProxy(RPC_SERVER_URI)
     try:
         print(election_coordinator.register_vote(candidate, voter))
+        logger.info('Vote registered')
+
     except xmlrpc.client.ProtocolError as err:
         print("Error occurred")
