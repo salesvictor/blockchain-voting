@@ -45,10 +45,10 @@ class Client:
 
         # Create object Voter to register vote
         voter = Voter(name, cpf)
-        self.logger.info('voter '+str([cpf, name])+' registered')
+        self.logger.info(f'voter {str([cpf, name])} registered')
 
         # Beginning of the Election
-        self.logger.info('voter '+str([cpf, name])+' starting votation')
+        self.logger.info(f'voter {str([cpf, name])} starting votation')
 
         if not given_information:
             candidate = input('Type your chosen candidate: ')
@@ -66,13 +66,13 @@ class Client:
                 self.logger.info(f'Following error occurred:{register_status}')
 
         except xmlrpc.client.ProtocolError as err:
-            print(f"Error occurred: {str(err)}")
+            print(f'Error occurred: {str(err)}')
 
 
 if __name__ == '__main__':
     # Voter Information
-    name = 'Lourenco'
-    cpf = '00000000000'
+    name = 'Victor'
+    cpf = '00000000004'
     candidate = 'Candidate A'
 
     # Calling Client Interface to start voting process
