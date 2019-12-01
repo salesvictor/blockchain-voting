@@ -14,7 +14,7 @@ class CoordinatorService:
         logger = logging.getLogger('ElectionCoordinator')
         logger.info('Received vote')
 
-        vote, answer, vote_weight = authentication(candidate, voter)
+        vote, answer, vote_weight = self._authentication(candidate, voter)
 
         if vote is not None:
             for i in range(vote_weight):
@@ -41,12 +41,12 @@ class CoordinatorService:
             homologator.homologate_vote(vote)
 
     def _is_valid_cpf(self, cpf: str):
-        if voter_cpf.isdigit(): #just numbers
-            if len(voter_cpf) < 11:
-                voter_cpf = voter_cpf.zfill(11)
-            voter_cpf = f'{voter_cpf[:3]}.{voter_cpf[3:6]}.{voter_cpf[6:9]}-{voter_cpf[9:]}'
+        if cpf.isdigit(): #just numbers
+            if len(cpf) < 11:
+                cpf = cpf.zfill(11)
+            cpf = f'{cpf[:3]}.{cpf[3:6]}.{cpf[6:9]}-{cpf[9:]}'
         prog = re.compile('[0-9]{3}\.?[0-9]{3}\.?[0-9]{3}\-?[0-9]{2}$')
-        result = prog.match(voter_cpf)
+        result = prog.match(cpf)
         if result: #CPF correctly formatted
             return True
         return False
