@@ -25,7 +25,7 @@ class CoordinatorService:
             for allowed_voter_data in self.allowed_voters_data:
                 if allowed_voter_data[0] == pattern_name and allowed_voter_data[1] == pattern_cpf:
                     voter_index = current_voter_index
-                current_voter_index = current_voter_index + 1
+                current_voter_index += 1
             pattern_candidate = candidate.upper()
             vote = Vote(Voter(pattern_name, pattern_cpf), pattern_candidate)
             vote_weight = self.allowed_voters_data[voter_index][2]
@@ -39,7 +39,8 @@ class CoordinatorService:
 
             return 'Vote received successfully'
         else:
-            logger.info('An error occurred')
+            logger.info(answer)
+            logger.info('Reporting client!')
             return answer
 
     def add_homologator(self, port: int):
@@ -52,13 +53,6 @@ class CoordinatorService:
         for vote in self.votes:
             homologator.homologate_vote(vote)
 
-    def _standardize_cpf(self, cpf: str):
-        if len(cpf) < 11:
-            cpf = cpf.zfill(11)
-        cpf = f'{cpf[:3]}.{cpf[3:6]}.{cpf[6:9]}-{cpf[9:]}'
-
-        return cpf
-
     def _is_valid_cpf(self, cpf: str):
         prog = re.compile('[0-9]{3}\.?[0-9]{3}\.?[0-9]{3}\-?[0-9]{2}$')
         result = prog.match(cpf)
@@ -67,18 +61,19 @@ class CoordinatorService:
         return None, False
 
     def _authentication(self, voter: Voter):
-        # Format voter data
-        voter_name = voter['name'].upper()
-        voter_cpf = voter['cpf']
-        voter_cpf, is_valid_cpf = self._is_valid_cpf(voter_cpf)
+        # Checking if CPF is valid
+        voter_cpf, is_valid_cpf = self._is_valid_cpf(voter['cpf'])
         if not is_valid_cpf:
             return f'Wrong CPF Format. Expected xxx.xxx.xxx-xx and received {voter_cpf}'
 
-        # Sending information
+
+        # Searching voter's identity at allowed voters database
+        voter_name = voter['name']
         for allowed_voter_data in self.allowed_voters_data:
             if allowed_voter_data[0] == voter_name and allowed_voter_data[1] == voter_cpf:
                 return 'Successful Authentication'
 
+        # If it comes until here, then voter's name or CPF was not found at the Database
         name_flag = False
         cpf_flag = False
         for i in range(len(self.allowed_voters_data)):
