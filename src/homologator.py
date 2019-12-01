@@ -11,7 +11,7 @@ import sys
 class HomologatorService():
     def __init__(self):
         self.logger = logging.getLogger('Homologator')
-        self.map_candidate = {'Candidate A': 0, 'Candidate B': 1, 'Candidate C': 2, 'Candidate D': 3, 'Candidate E': 4}
+        self.map_candidate = {'CANDIDATE A': 0, 'CANDIDATE B': 1, 'CANDIDATE C': 2, 'CANDIDATE D': 3, 'CANDIDATE E': 4}
         self.blockchain_candidates = []
         self.number_candidates = 5
         for i in range(self.number_candidates):
