@@ -31,7 +31,7 @@ class CoordinatorService:
                 if not self.homologators:
                     self.votes.append(vote)
                 else:
-                    for homologator in self.homologators:
+                    for homologator, _ in self.homologators:
                         homologator.homologate_vote(vote)
 
             logger.info(f'Vote CPF is {vote.cpf}')
@@ -101,7 +101,7 @@ class CoordinatorService:
 
 
 class ElectionCoordinator(xmlrpc.server.SimpleXMLRPCServer):
-    def __init__(self, addr: tuple = RPC_SERVER_ADDR, timeout: int = 100):
+    def __init__(self, addr: tuple = RPC_SERVER_ADDR, timeout: int = 30):
         super().__init__(addr, allow_none=True, logRequests=False)
         self.timeout = timeout
         self.service = CoordinatorService()
@@ -123,12 +123,16 @@ class ElectionCoordinator(xmlrpc.server.SimpleXMLRPCServer):
         self.logger.info('Server is down')
 
         winners = []
-        for homologator in self.service.homologators:
+        for homologator, _ in self.service.homologators:
             winners.append(homologator.get_election_winner())
 
         self.logger.info(f'Winners found: {winners}')
 
-        for homologator in self.service.homologators:
+        winners = [winner for winner in winners if winner]
+        winner = max(set(winners), key=winners.count)
+        self.logger.info(f'Final winner: {winner}!')
+
+        for homologator, _ in self.service.homologators:
             self.logger.debug(f'Shutting down homologator {homologator}')
             homologator.shutdown()
 

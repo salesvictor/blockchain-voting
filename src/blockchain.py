@@ -1,7 +1,7 @@
 from block import Block, Transaction
 from random import uniform
 
-PROBABILITY_TO_CORRUPT = 0.001
+PROBABILITY_TO_CORRUPT = 0.05
 
 
 class Blockchain:
@@ -27,7 +27,7 @@ class Blockchain:
 
     def copy_blocks(self, list_transactions):
         for transactions in list_transactions[1:]:
-            self.pending_transactions = Transaction(transactions[0]['name'], transactions[0]['cpf'])
+            self.pending_transactions = [Transaction(transactions[0]['name'], transactions[0]['cpf'])]
             block = Block(self.pending_transactions, self.blockchain[-1].hash)
             self.pending_transactions = []
             self.blockchain.append(block)
@@ -41,7 +41,7 @@ class Blockchain:
             self.pending_transactions = []
             self.blockchain.append(block)
         else:
-            self.pending_transactions = Transaction('corrupted package', 'no id')
+            self.pending_transactions = [Transaction('corrupted package', 'no id')]
             block = Block(self.pending_transactions, '0' * 64)
             self.pending_transactions = []
             self.blockchain.append(block)
