@@ -23,9 +23,11 @@ class Homologator(xmlrpc.server.SimpleXMLRPCServer):
         self.server_thread.start()
 
     def serve_forever(self):
-        threading.Thread(target=super().serve_forever)
-        self.shutdown_condition.acquire()
-        self.shutdown_condition.wait_for(self.shutdown_event.is_set)
+        base_thread = threading.Thread(target=super().serve_forever)
+        base_thread.start()
+
+        with self.shutdown_condition:
+            self.shutdown_condition.wait_for(self.shutdown_event.is_set)
         self.shutdown()
 
     def shutdown(self):
@@ -47,9 +49,12 @@ class HomologatorService:
     def __init__(self, homologator: Homologator):
         self.homologator = homologator
         self.logger = logging.getLogger('Homologator')
-        self.map_candidate = {'CANDIDATE A': 0, 'CANDIDATE B': 1, 'CANDIDATE C': 2, 'CANDIDATE D': 3, 'CANDIDATE E': 4}
+        self.candidates = []
+        self.candidate_number = dict()
+        self.candidate_parties = dict()
+        self._get_candidates()
         self.blockchain_candidates = []
-        self.number_candidates = 5
+        self.number_candidates = len(self.candidate_number)
         for i in range(self.number_candidates):
             bc = Blockchain(i)
             self.blockchain_candidates.append(bc)
@@ -57,7 +62,8 @@ class HomologatorService:
     def shutdown(self):
         self.logger.info('Setting shutdown event')
         self.homologator.shutdown_event.set()
-        self.homologator.shutdown_condition.notify()
+        with self.homologator.shutdown_condition:
+            self.homologator.shutdown_condition.notify()
 
     def homologate_vote(self, vote: Vote):
         self.logger.info('Received vote to homologate')
@@ -66,16 +72,8 @@ class HomologatorService:
 
         return 'Vote homologated'
 
-    def map_vote(self, name_voter:str):
-        return self.map_candidate[name_voter]
-
-    def get_candidate_name(self, position):
-        for name, val in self.map_candidate.items():
-            if val == position:
-                return name
-
     def add_vote(self, vote):
-        candidate_position = self.map_vote(vote['candidate'])
+        candidate_position = self.candidate_number[vote['candidate']]
         transaction = Transaction(vote['name'], vote['cpf'])
         self.blockchain_candidates[candidate_position].add_pending(transaction)
         self.blockchain_candidates[candidate_position].build_block()
@@ -95,10 +93,17 @@ class HomologatorService:
         for blockchain_candidate in self.blockchain_candidates:
             if (max_chain_length < len(blockchain_candidate.blockchain) - 1) and blockchain_candidate.is_valid():
                 max_chain_length = len(blockchain_candidate.blockchain) - 1
-                name_candidate = self.get_candidate_name(blockchain_candidate.id)
+                name_candidate = self.candidates[blockchain_candidate.id][0]
 
         return name_candidate
 
+    def _get_candidates(self):
+        file = open('candidates.csv', 'r')
+        for idx, line in enumerate(file.readlines()[1:]):
+            candidate, party = line.split(',')
+            self.candidates.append((candidate, party))
+            self.candidate_number[candidate] = idx
+            self.candidate_parties[candidate] = party
 
 if __name__ == "__main__":
     port = int(sys.argv[1])

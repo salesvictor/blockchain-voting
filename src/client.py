@@ -5,22 +5,23 @@ import re
 from api import *
 
 class Client:
-
     def __init__(self):
         self._create_logger()
 
     def _create_logger(self):
-        self.logger = logger_factory('vote_process',
-                                'voting.log')
+        self.logger = logger_factory('vote_process', 'voting.log')
         self.logger.info('Ready')
 
     def _standardize_cpf(self, cpf: str):
         prog = re.compile('[0-9]{3}\.[0-9]{3}\.[0-9]{3}\-[0-9]{2}$')
         result = prog.match(cpf)
-        if result: #CPF correctly formatted
+        if result:
+            #CPF correctly formatted
             return cpf
-        else: # Or just numbers were given or the information is wrong. At both cases, standardize the cpf
-              # and let the election coordinator authenticate
+        else: 
+            # Or just numbers were given or the information is wrong. At both 
+            # cases, standardize the cpf and let the election coordinator
+            # authenticate
             if len(cpf) < 11:
                 cpf = cpf.zfill(11)
             cpf = f'{cpf[:3]}.{cpf[3:6]}.{cpf[6:9]}-{cpf[9:]}'
@@ -29,7 +30,8 @@ class Client:
     def _standardize_name(self, name: str):
         return name.upper()
 
-    def voting_process(self, given_information : bool, name : str = None, cpf: str = None, candidate: str = None):
+    def voting_process(self, given_information : bool, name : str = None, 
+                       cpf: str = None, candidate: str = None):
         # Picking voter informations (Name, CPF)
         self.logger.info('Start voting process')
         if not given_information:
@@ -59,7 +61,8 @@ class Client:
         # Create Conection with Election Coordinator to Register Vote
         election_coordinator = xmlrpc.client.ServerProxy(RPC_SERVER_URI)
         try:
-            register_status = election_coordinator.register_vote(candidate, voter)
+            register_status = election_coordinator.register_vote(candidate, 
+                                                                 voter)
             if register_status == 'Vote received successfully':
                 self.logger.info('Vote successfully registered')
             else:
@@ -73,7 +76,7 @@ if __name__ == '__main__':
     # Voter Information
     name = 'Lourenco'
     cpf = '00000000000'
-    candidate = 'Candidate A'
+    candidate = 'C1'
 
     # Calling Client Interface to start voting process
     client = Client()

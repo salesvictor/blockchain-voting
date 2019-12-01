@@ -8,7 +8,7 @@ import xmlrpc.server
 
 class CoordinatorService:
     def __init__(self):
-        self.allowed_voters_data = []
+        self.voters_data = []
         self.homologators = []
         self.votes = []
         self._load_data()
@@ -21,14 +21,12 @@ class CoordinatorService:
         if answer == 'Successful Authentication':
             pattern_cpf, _ = self._is_valid_cpf(voter['cpf'])
             pattern_name = voter['name'].upper()
-            current_voter_index = 0
-            for allowed_voter_data in self.allowed_voters_data:
-                if allowed_voter_data[0] == pattern_name and allowed_voter_data[1] == pattern_cpf:
-                    voter_index = current_voter_index
-                current_voter_index += 1
+            for idx, voter_data in enumerate(self.voters_data):
+                if voter_data[0] == pattern_name and voter_data[1] == pattern_cpf:
+                    voter_index = idx
             pattern_candidate = candidate.upper()
             vote = Vote(Voter(pattern_name, pattern_cpf), pattern_candidate)
-            vote_weight = self.allowed_voters_data[voter_index][2]
+            vote_weight = self.voters_data[voter_index][2]
             for i in range(vote_weight):
                 self.votes.append(vote)
                 for homologator in self.homologators:
@@ -69,17 +67,17 @@ class CoordinatorService:
 
         # Searching voter's identity at allowed voters database
         voter_name = voter['name']
-        for allowed_voter_data in self.allowed_voters_data:
+        for allowed_voter_data in self.voters_data:
             if allowed_voter_data[0] == voter_name and allowed_voter_data[1] == voter_cpf:
                 return 'Successful Authentication'
 
         # If it comes until here, then voter's name or CPF was not found at the Database
         name_flag = False
         cpf_flag = False
-        for i in range(len(self.allowed_voters_data)):
-            if self.allowed_voters_data[i][0] == voter_name:
+        for i in range(len(self.voters_data)):
+            if self.voters_data[i][0] == voter_name:
                 name_flag = True
-            if self.allowed_voters_data[i][1] != voter_cpf:
+            if self.voters_data[i][1] != voter_cpf:
                 cpf_flag = True
         if not name_flag:
             return 'Given name not in database of allowed voters'
@@ -87,11 +85,11 @@ class CoordinatorService:
            return 'Given CPF not in database of allowed voters'
 
     def _load_data(self):
-        allowed_voters = open('allowed_voters.txt', 'r')
-        for line in allowed_voters.readlines():
-            allowed_voter_data = line.split(',')
-            allowed_voter_data[2] = int(allowed_voter_data[2].replace('\n', ''))
-            self.allowed_voters_data.append(allowed_voter_data)
+        file = open('voters.csv', 'r')
+        for line in file.readlines()[1:]:
+            voter_data = line.split(',')
+            voter_data[2] = int(voter_data[2].replace('\n', ''))
+            self.voters_data.append(voter_data)
 
 
 class ElectionCoordinator(xmlrpc.server.SimpleXMLRPCServer):
