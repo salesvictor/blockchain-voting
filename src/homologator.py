@@ -66,6 +66,7 @@ class Homologator(xmlrpc.server.SimpleXMLRPCServer):
         self._register_functions()
         self._create_logger()
 
+    def start(self):
         server_thread = Thread(target=self.serve_forever)
         server_thread.start()
 
