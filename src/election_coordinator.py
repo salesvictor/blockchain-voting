@@ -10,7 +10,7 @@ def register_vote(candidate: str, voter: Voter):
 
 class ElectionCoordinator(xmlrpc.server.SimpleXMLRPCServer):
     def __init__(self, addr):
-        super().__init__(addr)
+        super().__init__(addr, allow_none=True)
         self.addr = addr
         self._register_functions()
         self._create_logger()
