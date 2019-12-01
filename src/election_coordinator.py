@@ -10,13 +10,29 @@ class CoordinatorService:
     votes = []
     homologators = []
 
+    def __init__(self):
+        self.voters_voting_weights = []
+        self.picking_weights()
+
+    def picking_weights(self):
+        self.allowed_voters = open("allowed_voters.txt", "r")
+        for line in self.allowed_voters.readlines():
+            allowed_voter_data = line.split(',')
+            allowed_voter_data[2] = allowed_voter_data[2].replace('\n', '')
+            self.voters_voting_weights.append(allowed_voter_data[2])
+
     def register_vote(self, candidate: str, voter: Voter):
         logger = logging.getLogger('ElectionCoordinator')
         logger.info('Received vote')
 
-        vote, answer, vote_weight = self._authentication(candidate, voter)
+        voter_index, answer = self._authentication(candidate, voter)
 
-        if vote is not None:
+        if voter_index is not None:
+            pattern_cpf, _ = self._is_valid_cpf(voter['cpf'])
+            pattern_name = voter['name'].upper()
+            pattern_candidate = candidate.upper()
+            vote = Vote(Voter(pattern_name, pattern_cpf), pattern_candidate)
+            vote_weight = self.voters_voting_weights[voter_index]
             for i in range(vote_weight):
                 self.votes.append(vote)
                 for homologator in self.homologators:
@@ -48,42 +64,38 @@ class CoordinatorService:
         prog = re.compile('[0-9]{3}\.?[0-9]{3}\.?[0-9]{3}\-?[0-9]{2}$')
         result = prog.match(cpf)
         if result: #CPF correctly formatted
-            return True
-        return False
+            return cpf, True
+        return None, False
 
     def _authentication(self, candidate: str, voter: Voter):
-        allowed_voters = open("allowed_voters.txt", "r")
-
         # Format voter data
         voter_name = voter['name'].upper()
-        voter_candidate = candidate.upper()
         voter_cpf = voter['cpf']
-        if not self._is_valid_cpf(voter_cpf):
-            return None, f'Wrong CPF Format. Expected xxx.xxx.xxx-xx and received {voter_cpf}', None
+        voter_cpf, is_valid_cpf = self._is_valid_cpf(voter_cpf)
+        if not is_valid_cpf:
+            return None, f'Wrong CPF Format. Expected xxx.xxx.xxx-xx and received {voter_cpf}'
 
         # Sending information
-        counter = 0
+        n_allowed_voters = 0
         allowed_voters_data = []
-        for line in allowed_voters.readlines():
-            counter = counter + 1
+        for line in self.allowed_voters.readlines():
             allowed_voter_data = line.split(',')
-            allowed_voter_data[2] = allowed_voter_data[2].replace('\n', '')
-            allowed_voters_data.append(allowed_voter_data)
+            allowed_voters_data.append(allowed_voter_data[:2])
             if allowed_voter_data[0] == voter_name and allowed_voter_data[1] == voter_cpf:
-                authenticated_voter = Voter(voter_cpf, voter_name)
-                return Vote(authenticated_voter, voter_candidate), 'Successful Authentication', int(allowed_voter_data[2])
+                return n_allowed_voters, 'Successful Authentication'
+            n_allowed_voters = n_allowed_voters + 1
 
         name_flag = False
         cpf_flag = False
-        for i in range(counter):
+        for i in range(n_allowed_voters):
             if allowed_voters_data[i][0] == voter_name:
                 name_flag = True
             if allowed_voters_data[i][1] != voter_cpf:
                 cpf_flag = True
         if not name_flag:
-            return None, 'Given name not in database of allowed voters', None
+            return None, 'Given name not in database of allowed voters'
         elif not cpf_flag:
-            return None, 'Given CPF not in database of allowed voters', None
+           return None, 'Given CPF not in database of allowed voters'
 
 
 class ElectionCoordinator(xmlrpc.server.SimpleXMLRPCServer):
