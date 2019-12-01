@@ -1,7 +1,7 @@
 import logging
 
 
-RPC_SERVER_URI = 'https://localhost:8000/'
+RPC_SERVER_URI = 'http://localhost:8000/'
 RPC_SERVER_ADDR = ('localhost', 8000)
 
 
@@ -23,6 +23,6 @@ def logger_factory(name: str, filename: str, stream_level: int = logging.INFO):
 
 
 class Voter:
-    def __init__(self, cpf: str, nome:str):
-        self.cpf = cpf
+    def __init__(self, name: str, cpf:str):
         self.name = name
+        self.cpf = cpf

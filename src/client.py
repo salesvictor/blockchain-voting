@@ -1,4 +1,3 @@
-import tkinter
 import xmlrpc.client
 import logging
 
