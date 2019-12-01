@@ -4,6 +4,7 @@ import xmlrpc.server
 import logging
 import re
 
+
 def authentication(candidate: str, voter: Voter):
     allowed_voters = open("allowed_voters.txt", "r")
 
@@ -15,7 +16,7 @@ def authentication(candidate: str, voter: Voter):
         if len(voter_cpf) < 11:
             voter_cpf = voter_cpf.zfill(11)
         voter_cpf = '{}.{}.{}-{}'.format(voter_cpf[:3], voter_cpf[3:6], voter_cpf[6:9], voter_cpf[9:])
-    prog = re.compile('[0-9]{3}\.?[0-9]{3}\.?[0-9]{3}\-?[0-9]{2}')
+    prog = re.compile('[0-9]{3}\.?[0-9]{3}\.?[0-9]{3}\-?[0-9]{2}$')
     result = prog.match(voter_cpf)
     if result: #CPF correctly formatted
         pass
@@ -57,17 +58,12 @@ class CoordinatorService:
 
         vote, answer, vote_weight = authentication(candidate, voter)
 
-        #vote = Vote(Voter(voter['name'], voter['cpf']), candidate)
-        #vote_weight = 1
-
-        print(vote, vote_weight)
         if vote is not None:
-            self.votes.append(vote)
-            logger.info(self.votes)
-
-            homologator = xmlrpc.client.ServerProxy('http://localhost:8001/')
             for i in range(vote_weight):
-                homologator.homologate_vote(vote)
+                self.votes.append(vote)
+                for homologator in self.homologators:
+                        homologator.homologate_vote(vote)
+
             logger.info('Vote CPF is ' + vote.cpf)
             logger.info('Vote Weight is ' + str(vote_weight))
 
@@ -76,12 +72,11 @@ class CoordinatorService:
             logger.info('An error occurred')
             return answer
 
-
     def add_homologator(self, port: int):
         logger = logging.getLogger('ElectionCoordinator')
         logger.info(f'New homologator on port {port}')
 
-        homologator = xmlrpc.client.ServerProxy(f'https://localhost:{port}/')
+        homologator = xmlrpc.client.ServerProxy(f'http://localhost:{port}/')
         self.homologators.append(homologator)
         
         for vote in self.votes:
