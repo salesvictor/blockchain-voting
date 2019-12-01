@@ -83,6 +83,8 @@ class CoordinatorService:
             return 'Given name not in database of allowed voters'
         elif not cpf_flag:
            return 'Given CPF not in database of allowed voters'
+        else:
+            return 'Given pair (Name, CPF) not in database of allowed voters'
 
     def _load_data(self):
         file = open('voters.csv', 'r')
