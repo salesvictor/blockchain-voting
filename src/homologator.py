@@ -41,7 +41,6 @@ class Homologator(xmlrpc.server.SimpleXMLRPCServer):
                                      'Homologator.log')
         self.logger.info('Ready')
 
-
     def map_vote(self, name_voter:str):
         return self.dict[name_voter]
 
@@ -51,8 +50,8 @@ class Homologator(xmlrpc.server.SimpleXMLRPCServer):
                 return name
 
     def add_vote(self, vote):
-        candidate_position = self.map_vote(vote.get_candidate_name())
-        self.blockchain_candidates[candidate_position].add_pending(vote.get_content())
+        candidate_position = self.map_vote(vote['candidate_name'])
+        self.blockchain_candidates[candidate_position].add_pending(Transaction(vote['name'], vote['cpf'])
         self.blockchain_candidates[candidate_position].build_block()
 
     def get_winner_election(self):
@@ -65,6 +64,11 @@ class Homologator(xmlrpc.server.SimpleXMLRPCServer):
 
         return name_candidate
 
-
 if __name__ == "__main__":
     homologator = Homologator(number_candidates=2, addr=('localhost', 8001))
+    election_coordinator = xmlrpc.client.ServerProxy(RPC_SERVER_URI)
+    try:
+        print(election_coordinator.add_homologator(8001))
+
+    except xmlrpc.client.ProtocolError as err:
+        print("Error occurred")
