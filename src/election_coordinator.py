@@ -42,8 +42,9 @@ def register_vote(candidate: str, voter: Voter):
     vote, answer, vote_weight = authentication(candidate, voter)
 
     if vote is not None:
-        # for i in range(vote_weight):
-        #    pass
+        homologator = xmlrpc.client.ServerProxy('http://localhost:8001/')
+        for i in range(vote_weight):
+            homologator.homologate_vote(vote)
         logger.info('Vote CPF is ' + vote.voter.cpf)
         logger.info('Vote Weight is ' + str(vote_weight))
         return 'Vote received successfully'

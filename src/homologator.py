@@ -64,6 +64,11 @@ class Homologator(xmlrpc.server.SimpleXMLRPCServer):
 
         return name_candidate
 
-
 if __name__ == "__main__":
     homologator = Homologator(number_candidates=2, addr=('localhost', 8001))
+    election_coordinator = xmlrpc.client.ServerProxy(RPC_SERVER_URI)
+    try:
+        print(election_coordinator.add_homologator(8001))
+
+    except xmlrpc.client.ProtocolError as err:
+        print("Error occurred")
