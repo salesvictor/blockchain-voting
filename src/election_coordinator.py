@@ -112,8 +112,9 @@ class ElectionCoordinator(xmlrpc.server.SimpleXMLRPCServer):
         self.shutdown()
 
     def shutdown(self):
+        self.logger.info('Shutting down')
         super().shutdown()
-        self.logger.info('Servers are down')
+        self.logger.info('Server is down')
 
         winners = []
         for homologator in self.service.homologators:

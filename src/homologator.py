@@ -1,8 +1,8 @@
 from block import Block, Transaction
-from threading import Thread
 from blockchain import Blockchain
 import xmlrpc.server
 import logging
+import threading
 from random import randint
 from api import *
 import sys
@@ -13,12 +13,25 @@ class Homologator(xmlrpc.server.SimpleXMLRPCServer):
         super().__init__(addr, logRequests=False, allow_none=True)
 
         self.addr = addr
+        self.shutdown_condition = threading.Condition()
+        self.shutdown_event = threading.Event()
         self._register_functions()
         self._create_logger()
 
     def start(self):
-        self.server_thread = Thread(target=self.serve_forever)
+        self.server_thread = threading.Thread(target=self.serve_forever)
         self.server_thread.start()
+
+    def serve_forever(self):
+        threading.Thread(target=super().serve_forever)
+        self.shutdown_condition.acquire()
+        self.shutdown_condition.wait_for(self.shutdown_event.is_set)
+        self.shutdown()
+
+    def shutdown(self):
+        self.logger.info('Shutting down')
+        super().shutdown()
+        self.logger.info('Shutdown successfull')
 
     def _register_functions(self):
         self.register_introspection_functions()
@@ -42,11 +55,9 @@ class HomologatorService:
             self.blockchain_candidates.append(bc)
 
     def shutdown(self):
-        self.logger.info('Shutting down')
-        print(self.homologator.shutdown)
-        print(self.homologator.server_thread.is_alive())
-        self.homologator.shutdown()
-        self.logger.info('ok')
+        self.logger.info('Setting shutdown event')
+        self.homologator.shutdown_event.set()
+        self.homologator.shutdown_condition.notify()
 
     def homologate_vote(self, vote: Vote):
         self.logger.info('Received vote to homologate')
