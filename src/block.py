@@ -2,15 +2,9 @@ import hashlib
 
 
 class Transaction:
-    def __init__(self, from_address: str, to_address: str, name: str, cpf: str):
-        self.from_address = from_address
-        self.to_address = to_address
+    def __init__(self, name: str, cpf: str):
         self.name = name
         self.cpf = cpf
-
-    def __repr__(self):
-        return f'vote from={self.from_address} to={self.to_address} name={self.name}'
-
 
 class Block:
     ''' Will hold a block of data and its validation. '''
