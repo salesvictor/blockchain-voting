@@ -28,8 +28,10 @@ class CoordinatorService:
             vote = Vote(Voter(pattern_name, pattern_cpf), pattern_candidate)
             vote_weight = self.voters_data[voter_index][2]
             for i in range(vote_weight):
-                self.votes.append(vote)
-                for homologator in self.homologators:
+                if not self.homologators:
+                    self.votes.append(vote)
+                else:
+                    for homologator in self.homologators:
                         homologator.homologate_vote(vote)
 
             logger.info(f'Vote CPF is {vote.cpf}')
@@ -46,10 +48,14 @@ class CoordinatorService:
         logger.info(f'New homologator on port {port}')
 
         homologator = xmlrpc.client.ServerProxy(f'http://localhost:{port}/')
-        self.homologators.append(homologator)
+        if self.homologators:
+            homologator.get_ports([port for _, port in self.homologators])
+        else:
+            while self.votes:
+                homologator.homologate_vote(self.votes.pop(0))
+
+        self.homologators.append((homologator, port))
         
-        for vote in self.votes:
-            homologator.homologate_vote(vote)
 
     def _is_valid_cpf(self, cpf: str):
         prog = re.compile('[0-9]{3}\.?[0-9]{3}\.?[0-9]{3}\-?[0-9]{2}$')
