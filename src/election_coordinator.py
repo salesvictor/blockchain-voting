@@ -7,26 +7,18 @@ import xmlrpc.server
 
 
 class CoordinatorService:
-    votes = []
-    homologators = []
-
     def __init__(self):
         self.allowed_voters_data = []
-        self.picking_data()
-
-    def picking_data(self):
-        allowed_voters = open("allowed_voters.txt", "r")
-        for line in allowed_voters.readlines():
-            allowed_voter_data = line.split(',')
-            allowed_voter_data[2] = int(allowed_voter_data[2].replace('\n', ''))
-            self.allowed_voters_data.append(allowed_voter_data)
+        self.homologators = []
+        self.votes = []
+        self._load_data()
 
     def register_vote(self, candidate: str, voter: Voter):
         logger = logging.getLogger('ElectionCoordinator')
         logger.info('Received vote')
 
         answer = self._authentication(voter)
-        if answer == "Successful Authentication":
+        if answer == 'Successful Authentication':
             pattern_cpf, _ = self._is_valid_cpf(voter['cpf'])
             pattern_name = voter['name'].upper()
             current_voter_index = 0
@@ -60,11 +52,14 @@ class CoordinatorService:
         for vote in self.votes:
             homologator.homologate_vote(vote)
 
+    def _standardize_cpf(self, cpf: str):
+        if len(cpf) < 11:
+            cpf = cpf.zfill(11)
+        cpf = f'{cpf[:3]}.{cpf[3:6]}.{cpf[6:9]}-{cpf[9:]}'
+
+        return cpf
+
     def _is_valid_cpf(self, cpf: str):
-        if cpf.isdigit(): #just numbers
-            if len(cpf) < 11:
-                cpf = cpf.zfill(11)
-            cpf = f'{cpf[:3]}.{cpf[3:6]}.{cpf[6:9]}-{cpf[9:]}'
         prog = re.compile('[0-9]{3}\.?[0-9]{3}\.?[0-9]{3}\-?[0-9]{2}$')
         result = prog.match(cpf)
         if result: #CPF correctly formatted
@@ -96,11 +91,17 @@ class CoordinatorService:
         elif not cpf_flag:
            return 'Given CPF not in database of allowed voters'
 
+    def _load_data(self):
+        allowed_voters = open('allowed_voters.txt', 'r')
+        for line in allowed_voters.readlines():
+            allowed_voter_data = line.split(',')
+            allowed_voter_data[2] = int(allowed_voter_data[2].replace('\n', ''))
+            self.allowed_voters_data.append(allowed_voter_data)
+
 
 class ElectionCoordinator(xmlrpc.server.SimpleXMLRPCServer):
     def __init__(self, addr: tuple = RPC_SERVER_ADDR, timeout: int = 60):
         super().__init__(addr, allow_none=True, logRequests=False)
-        self.addr = addr
         self.timeout = timeout
         self.service = CoordinatorService()
         self._register_services()
