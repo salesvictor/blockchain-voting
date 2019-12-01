@@ -7,6 +7,8 @@ def register_vote(candidate: str, voter: Voter):
     logger = logging.getLogger('ElectionCoordinator')
     logger.info('Received vote')
 
+    return 'Vote received successfully'
+
 
 class ElectionCoordinator(xmlrpc.server.SimpleXMLRPCServer):
     def __init__(self, addr):
