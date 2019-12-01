@@ -137,5 +137,5 @@ class ElectionCoordinator(xmlrpc.server.SimpleXMLRPCServer):
 
 
 if __name__ == '__main__':
-    coordinator = election_coordinator.ElectionCoordinator(RPC_SERVER_ADDR)
+    coordinator = ElectionCoordinator(RPC_SERVER_ADDR)
     coordinator.start()

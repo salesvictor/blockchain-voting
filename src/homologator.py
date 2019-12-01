@@ -78,6 +78,7 @@ class Homologator(xmlrpc.server.SimpleXMLRPCServer):
 if __name__ == "__main__":
     port = int(sys.argv[1])
     homologator = Homologator(addr=('localhost', port))
+    homologator.start()
     election_coordinator = xmlrpc.client.ServerProxy(RPC_SERVER_URI)
     try:
         election_coordinator.add_homologator(port)
