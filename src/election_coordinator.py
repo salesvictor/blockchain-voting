@@ -100,7 +100,7 @@ class CoordinatorService:
 
 
 class ElectionCoordinator(xmlrpc.server.SimpleXMLRPCServer):
-    def __init__(self, addr: tuple = RPC_SERVER_ADDR, timeout: int = 60):
+    def __init__(self, addr: tuple = RPC_SERVER_ADDR, timeout: int = 10):
         super().__init__(addr, allow_none=True, logRequests=False)
         self.timeout = timeout
         self.service = CoordinatorService()
@@ -125,6 +125,10 @@ class ElectionCoordinator(xmlrpc.server.SimpleXMLRPCServer):
             winners.append(homologator.get_election_winner())
 
         self.logger.info(f'Winners found: {winners}')
+
+        for homologator in self.service.homologators:
+            self.logger.debug(f'Shutting down homologator {homologator}')
+            homologator.shutdown()
 
     def _register_services(self):
         self.register_introspection_functions()

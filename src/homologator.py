@@ -8,8 +8,31 @@ from api import *
 import sys
 
 
-class HomologatorService():
-    def __init__(self):
+class Homologator(xmlrpc.server.SimpleXMLRPCServer):
+    def __init__(self, addr):
+        super().__init__(addr, logRequests=False, allow_none=True)
+
+        self.addr = addr
+        self._register_functions()
+        self._create_logger()
+
+    def start(self):
+        self.server_thread = Thread(target=self.serve_forever)
+        self.server_thread.start()
+
+    def _register_functions(self):
+        self.register_introspection_functions()
+        self.register_instance(HomologatorService(self))
+
+    def _create_logger(self):
+        self.logger = logger_factory('Homologator',
+                                     'Homologator.log')
+        self.logger.info('Ready')
+
+
+class HomologatorService:
+    def __init__(self, homologator: Homologator):
+        self.homologator = homologator
         self.logger = logging.getLogger('Homologator')
         self.map_candidate = {'CANDIDATE A': 0, 'CANDIDATE B': 1, 'CANDIDATE C': 2, 'CANDIDATE D': 3, 'CANDIDATE E': 4}
         self.blockchain_candidates = []
@@ -17,6 +40,13 @@ class HomologatorService():
         for i in range(self.number_candidates):
             bc = Blockchain(i)
             self.blockchain_candidates.append(bc)
+
+    def shutdown(self):
+        self.logger.info('Shutting down')
+        print(self.homologator.shutdown)
+        print(self.homologator.server_thread.is_alive())
+        self.homologator.shutdown()
+        self.logger.info('ok')
 
     def homologate_vote(self, vote: Vote):
         self.logger.info('Received vote to homologate')
@@ -52,34 +82,11 @@ class HomologatorService():
         name_candidate = ''
 
         for blockchain_candidate in self.blockchain_candidates:
-            if max_chain_length < len(blockchain_candidate.blockchain) - 1:
+            if (max_chain_length < len(blockchain_candidate.blockchain) - 1) and blockchain_candidate.is_valid():
                 max_chain_length = len(blockchain_candidate.blockchain) - 1
                 name_candidate = self.get_candidate_name(blockchain_candidate.id)
 
         return name_candidate
-
-
-
-class Homologator(xmlrpc.server.SimpleXMLRPCServer):
-    def __init__(self, addr):
-        super().__init__(addr, logRequests=False, allow_none=True)
-
-        self.addr = addr
-        self._register_functions()
-        self._create_logger()
-
-    def start(self):
-        server_thread = Thread(target=self.serve_forever)
-        server_thread.start()
-
-    def _register_functions(self):
-        self.register_introspection_functions()
-        self.register_instance(HomologatorService())
-
-    def _create_logger(self):
-        self.logger = logger_factory('Homologator',
-                                     'Homologator.log')
-        self.logger.info('Ready')
 
 
 if __name__ == "__main__":
