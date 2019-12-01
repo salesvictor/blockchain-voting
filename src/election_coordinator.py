@@ -11,28 +11,32 @@ class CoordinatorService:
     homologators = []
 
     def __init__(self):
-        self.voters_voting_weights = []
-        self.picking_weights()
+        self.allowed_voters_data = []
+        self.picking_data()
 
-    def picking_weights(self):
-        self.allowed_voters = open("allowed_voters.txt", "r")
-        for line in self.allowed_voters.readlines():
+    def picking_data(self):
+        allowed_voters = open("allowed_voters.txt", "r")
+        for line in allowed_voters.readlines():
             allowed_voter_data = line.split(',')
-            allowed_voter_data[2] = allowed_voter_data[2].replace('\n', '')
-            self.voters_voting_weights.append(allowed_voter_data[2])
+            allowed_voter_data[2] = int(allowed_voter_data[2].replace('\n', ''))
+            self.allowed_voters_data.append(allowed_voter_data)
 
     def register_vote(self, candidate: str, voter: Voter):
         logger = logging.getLogger('ElectionCoordinator')
         logger.info('Received vote')
 
-        voter_index, answer = self._authentication(candidate, voter)
-
-        if voter_index is not None:
+        answer = self._authentication(voter)
+        if answer == "Successful Authentication":
             pattern_cpf, _ = self._is_valid_cpf(voter['cpf'])
             pattern_name = voter['name'].upper()
+            current_voter_index = 0
+            for allowed_voter_data in self.allowed_voters_data:
+                if allowed_voter_data[0] == pattern_name and allowed_voter_data[1] == pattern_cpf:
+                    voter_index = current_voter_index
+                current_voter_index = current_voter_index + 1
             pattern_candidate = candidate.upper()
             vote = Vote(Voter(pattern_name, pattern_cpf), pattern_candidate)
-            vote_weight = self.voters_voting_weights[voter_index]
+            vote_weight = self.allowed_voters_data[voter_index][2]
             for i in range(vote_weight):
                 self.votes.append(vote)
                 for homologator in self.homologators:
@@ -67,35 +71,30 @@ class CoordinatorService:
             return cpf, True
         return None, False
 
-    def _authentication(self, candidate: str, voter: Voter):
+    def _authentication(self, voter: Voter):
         # Format voter data
         voter_name = voter['name'].upper()
         voter_cpf = voter['cpf']
         voter_cpf, is_valid_cpf = self._is_valid_cpf(voter_cpf)
         if not is_valid_cpf:
-            return None, f'Wrong CPF Format. Expected xxx.xxx.xxx-xx and received {voter_cpf}'
+            return f'Wrong CPF Format. Expected xxx.xxx.xxx-xx and received {voter_cpf}'
 
         # Sending information
-        n_allowed_voters = 0
-        allowed_voters_data = []
-        for line in self.allowed_voters.readlines():
-            allowed_voter_data = line.split(',')
-            allowed_voters_data.append(allowed_voter_data[:2])
+        for allowed_voter_data in self.allowed_voters_data:
             if allowed_voter_data[0] == voter_name and allowed_voter_data[1] == voter_cpf:
-                return n_allowed_voters, 'Successful Authentication'
-            n_allowed_voters = n_allowed_voters + 1
+                return 'Successful Authentication'
 
         name_flag = False
         cpf_flag = False
-        for i in range(n_allowed_voters):
-            if allowed_voters_data[i][0] == voter_name:
+        for i in range(len(self.allowed_voters_data)):
+            if self.allowed_voters_data[i][0] == voter_name:
                 name_flag = True
-            if allowed_voters_data[i][1] != voter_cpf:
+            if self.allowed_voters_data[i][1] != voter_cpf:
                 cpf_flag = True
         if not name_flag:
-            return None, 'Given name not in database of allowed voters'
+            return 'Given name not in database of allowed voters'
         elif not cpf_flag:
-           return None, 'Given CPF not in database of allowed voters'
+           return 'Given CPF not in database of allowed voters'
 
 
 class ElectionCoordinator(xmlrpc.server.SimpleXMLRPCServer):
