@@ -1,7 +1,7 @@
 from block import Block, Transaction
 from random import uniform
 
-PROBABILITY_TO_CORRUPT = 0.1
+PROBABILITY_TO_CORRUPT = 0.001
 
 
 class Blockchain:
@@ -34,10 +34,6 @@ class Blockchain:
             self.blockchain.append(block)
         else:
             self.pending_transactions = Transaction('hacker', 'nobody', 'corruped package', 'no id')
-            block = Block(self.pending_transactions, self.blockchain[-1].hash)
+            block = Block(self.pending_transactions, '0' * 64)
             self.pending_transactions = []
             self.blockchain.append(block)
-
-
-if __name__ == "__main__":
-    print('kjbcjsdbjsad')

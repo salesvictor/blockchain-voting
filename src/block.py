@@ -15,9 +15,12 @@ class Transaction:
 class Block:
     ''' Will hold a block of data and its validation. '''
 
-    def __init__(self, transactions: list, previous_hash=''):
+    def __init__(self, transactions: list, previous_hash):
         self.transactions = transactions
         self.previous_hash = previous_hash
+
+    def print_previous_hash(self):
+        print(self.previous_hash)
 
     @property
     def hash(self):

@@ -3,45 +3,30 @@ import logging
 
 from api import *
 
-def do_something():
-    tkinter.messagebox.showinfo('Response', 'You have clicked the Button')
-
-def vote_interface():
-    root = tkinter.Tk()
-
-
-    label = tkinter.Label(root, text = 'Hello World')
-    another_label = tkinter.Label(root, text = 'This is GUI')
-    label.pack()
-    another_label.pack()
-    root.mainloop()
-    button = tkinter.Button(root, text="Click Me", command = do_something)
-    button.pack()
-
-
-if __name__ == "__main__":
-    #vote_interface()
-
-    # create logger object
+def voting_process():
+    # Create logger object
     logger = logger_factory('vote_process', 'voting.log', logging.ERROR)
+    logger.info('Ready')
 
-    logger.info('registering voter')
-    nome = input('Digite seu nome: ')
+    # Picking voter informations (Name, CPF and Chosen Candidate)
+    logger.info('Registering voter')
+    name = input('Type your name: ')
     print()
 
-    cpf = input('Digite seu cpf: ')
+    cpf = input('Type your CPF: ')
     print()
 
-    voter = Voter(cpf, nome)
-    logger.info('voter '+str([cpf, nome])+' registered')
-    logger.info('voter '+str([cpf, nome])+' starting voting')
-    candidate = input('Digite seu candidato: ')
+    voter = Voter(cpf, name)
+    logger.info('voter '+str([cpf, name])+' registered')
+    logger.info('voter '+str([cpf, name])+' starting voting')
+    candidate = input('Type your chosen candidate: ')
     print()
 
-    logger.info('vote registered')
-
+    # Create Conection with Election Coordinator to Register Vote
     election_coordinator = xmlrpc.client.ServerProxy(RPC_SERVER_URI)
     try:
-        election_coordinator.register_vote(candidate, voter)
+        print(election_coordinator.register_vote(candidate, voter))
+        logger.info('Vote registered')
+
     except xmlrpc.client.ProtocolError as err:
         print("Error occurred")

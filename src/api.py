@@ -26,3 +26,9 @@ class Voter:
     def __init__(self, name: str, cpf:str):
         self.name = name
         self.cpf = cpf
+
+
+class Vote:
+    def __init__(self, voter: Voter, candidate: str):
+        self.voter = voter
+        self.candidate = candidate
