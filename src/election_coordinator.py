@@ -22,8 +22,8 @@ class CoordinatorService:
                 for homologator in self.homologators:
                         homologator.homologate_vote(vote)
 
-            logger.info('Vote CPF is ' + vote.cpf)
-            logger.info('Vote Weight is ' + str(vote_weight))
+            logger.info(f'Vote CPF is {vote.cpf}')
+            logger.info(f'Vote Weight is {str(vote_weight)}')
 
             return 'Vote received successfully'
         else:
@@ -91,6 +91,7 @@ class ElectionCoordinator(xmlrpc.server.SimpleXMLRPCServer):
         super().__init__(addr, allow_none=True, logRequests=False)
         self.addr = addr
         self.timeout = timeout
+        self.service = CoordinatorService()
         self._register_services()
         self._create_logger()
 
@@ -102,14 +103,27 @@ class ElectionCoordinator(xmlrpc.server.SimpleXMLRPCServer):
         
         self.logger.info('Election time has run out, shutting RPC down')
         self.shutdown()
+
+    def shutdown(self):
+        super().shutdown()
         self.logger.info('Servers are down')
+
+        winners = []
+        for homologator in self.service.homologators:
+            winners.append(homologator.get_election_winner())
+
+        self.logger.info(f'Winners found: {winners}')
 
     def _register_services(self):
         self.register_introspection_functions()
-        self.register_instance(CoordinatorService())
+        self.register_instance(self.service)
 
     def _create_logger(self):
         self.logger = logger_factory('ElectionCoordinator',
                                      'ElectionCoordinator.log')
         self.logger.info('Ready')
 
+
+if __name__ == '__main__':
+    coordinator = election_coordinator.ElectionCoordinator(RPC_SERVER_ADDR)
+    coordinator.start()

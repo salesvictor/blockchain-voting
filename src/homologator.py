@@ -9,8 +9,8 @@ import sys
 
 
 class HomologatorService():
-
     def __init__(self):
+        self.logger = logging.getLogger('Homologator')
         self.map_candidate = {'Candidate A': 0, 'Candidate B': 1, 'Candidate C': 2, 'Candidate D': 3, 'Candidate E': 4}
         self.blockchain_candidates = []
         self.number_candidates = 5
@@ -18,15 +18,8 @@ class HomologatorService():
             bc = Blockchain()
             self.blockchain_candidates.append(bc)
 
-    def request_winner(self):
-        logger = logging.getLogger('Homologator')
-        logger.info('Received request to send the winner of the election')
-
-        return self.get_winner_election()
-
     def homologate_vote(self, vote: Vote):
-        logger = logging.getLogger('Homologator')
-        logger.info('Received vote to homologate')
+        self.logger.info('Received vote to homologate')
 
         self.add_vote(vote)
 
@@ -42,16 +35,19 @@ class HomologatorService():
 
     def add_vote(self, vote):
         candidate_position = self.map_vote(vote['candidate'])
-        self.blockchain_candidates[candidate_position].add_pending(Transaction(vote['name'], vote['cpf']))
+        transaction = Transaction(vote['name'], vote['cpf'])
+        self.blockchain_candidates[candidate_position].add_pending(transaction)
         self.blockchain_candidates[candidate_position].build_block()
 
-    def get_winner_election(self):
-        max = 0
+    def get_election_winner(self):
+        self.logger.info('Received request to send the winner of the election')
+
+        max_chain_length = 0
         name_candidate = ''
         for blockchain_candidate in self.blockchain_candidates:
-            if max < len(blockchain_candidate.blockchain)-1:
-                max = len(blockchain_candidate.blockchain)
-                name_candidate = self.get_candidate_name(max)
+            if max_chain_length < len(blockchain_candidate.blockchain) - 1:
+                max_chain_length = len(blockchain_candidate.blockchain) - 1
+                name_candidate = self.get_candidate_name(max_chain_length)
 
         return name_candidate
 
@@ -59,7 +55,6 @@ class HomologatorService():
 
 class Homologator(xmlrpc.server.SimpleXMLRPCServer):
     def __init__(self, addr):
-
         super().__init__(addr, logRequests=False, allow_none=True)
 
         self.addr = addr

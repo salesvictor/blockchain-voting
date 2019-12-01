@@ -30,3 +30,13 @@ def voting_process():
 
     except xmlrpc.client.ProtocolError as err:
         print("Error occurred")
+
+
+if __name__ == '__main__':
+    server = xmlrpc.client.ServerProxy(RPC_SERVER_URI)
+
+    name = 'Lourenco'
+    cpf = '000.000.000-00'
+    candidate = 'Candidate A'
+
+    server.register_vote(candidate, Voter(name, cpf))
