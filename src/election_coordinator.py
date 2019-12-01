@@ -4,6 +4,7 @@ import xmlrpc.server
 import logging
 import re
 
+
 def authentication(candidate: str, voter: Voter):
     allowed_voters = open("allowed_voters.txt", "r")
 
