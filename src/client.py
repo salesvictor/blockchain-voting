@@ -38,5 +38,9 @@ if __name__ == '__main__':
     name = 'Lourenco'
     cpf = '000.000.000-00'
     candidate = 'Candidate A'
+    server.register_vote(candidate, Voter(name, cpf))
 
+    name = 'Victor'
+    cpf = '000.000.000-04'
+    candidate = 'Candidate B'
     server.register_vote(candidate, Voter(name, cpf))
