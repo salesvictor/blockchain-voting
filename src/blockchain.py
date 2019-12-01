@@ -1,4 +1,7 @@
 from block import Block, Transaction
+from random import uniform
+
+PROBABILITY_TO_CORRUPT = 0.1
 
 
 class Blockchain:
@@ -25,20 +28,16 @@ class Blockchain:
         if len(self.pending_transactions) == 0:
             raise Exception('build_block: no transactions to build a block from')
 
-        block = Block(self.pending_transactions, self.blockchain[-1].hash)
-        self.pending_transactions = []
-        self.blockchain.append(block)
+        if uniform(0, 1) > PROBABILITY_TO_CORRUPT:
+            block = Block(self.pending_transactions, self.blockchain[-1].hash)
+            self.pending_transactions = []
+            self.blockchain.append(block)
+        else:
+            self.pending_transactions = Transaction('hacker', 'nobody', 'corruped package', 'no id')
+            block = Block(self.pending_transactions, self.blockchain[-1].hash)
+            self.pending_transactions = []
+            self.blockchain.append(block)
 
-    # Maybe it is useless for our application
-    def check_balance(self, wallet_address: str):
-        balance = 0
 
-        for block in self.blockchain:
-            for transaction in block.transactions:
-                if transaction.from_address == wallet_address:
-                    balance -= transaction.amount
-
-                if transaction.to_address == wallet_address:
-                    balance += transaction.amount
-
-        return balance
+if __name__ == "__main__":
+    print('kjbcjsdbjsad')
