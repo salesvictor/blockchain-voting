@@ -82,6 +82,8 @@ if __name__ == '__main__':
     client = Client()
     client.voting_process(True, name, cpf, candidate)
 
+    input()
+
     name = 'Victor'
     cpf = '00000000004'
     candidate = 'C2'
