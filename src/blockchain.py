@@ -1,7 +1,7 @@
 from block import Block, Transaction
 from random import uniform
 
-PROBABILITY_TO_CORRUPT = 0.05
+PROBABILITY_TO_CORRUPT = 0.001
 
 
 class Blockchain:
