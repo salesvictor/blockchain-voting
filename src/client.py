@@ -1,7 +1,7 @@
 import xmlrpc.client
 import logging
 import re
-
+import sys
 from api import *
 
 class Client:
@@ -74,17 +74,23 @@ class Client:
 
 if __name__ == '__main__':
     # Voter Information
-    name = 'Lourenco'
-    cpf = '00000000000'
-    candidate = 'C1'
-
-    # Calling Client Interface to start voting process
+    input_necessary = bool(sys.argv[1])
     client = Client()
-    client.voting_process(True, name, cpf, candidate)
+    if not input_necessary:
+        name = 'Lourenco'
+        cpf = '00000000000'
+        candidate = 'C1'
 
-    input()
+        # Calling Client Interface to start voting process
 
-    name = 'Victor'
-    cpf = '00000000004'
-    candidate = 'C2'
-    client.voting_process(True, name, cpf, candidate)
+        client.voting_process(True, name, cpf, candidate)
+
+        input()
+
+        name = 'Victor'
+        cpf = '00000000004'
+        candidate = 'C2'
+        client.voting_process(True, name, cpf, candidate)
+
+    else:
+        client.voting_process(False)
